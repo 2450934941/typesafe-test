@@ -1,0 +1,53 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+    id 'org.jetbrains.kotlin.kapt' version '1.3.72'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "com.typesafe:config:1.4.0"
+    implementation "io.github.config4k:config4k:0.4.2"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+mainClassName = 'app.Main'
+
+jar {
+    manifest {
+        attributes "Main-Class": mainClassName
+        /*
+         * We're merging multiple JAR files into a fat JAR, and one of our
+         * dependency (Log4J 2.x) is a Multi-Release JAR, so we need to set the
+         * resulting Fat JAR to be multi-release as well. (Otherwise you will
+         * see a warning when running on newer Java versions, and performance
+         * will be impacted)
+         */
+        attributes["Multi-Release"] = true
+    }
+}
+
+import com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer
+
+// Create a fat JAR
+shadowJar {
+    archiveClassifier.set('all')
+    mergeServiceFiles()
+    // Necessary to avoid errors with Log4J2
+    transform(Log4j2PluginsCacheFileTransformer)
+}
